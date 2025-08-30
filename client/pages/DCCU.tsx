@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/state/auth";
-
+import { useDCCU } from "@/state/dccu";
 import { useSupabaseData } from "@/hooks/use-supabase-data";
 import { Movie } from "@shared/supabase";
 import ScreenplayReader from "@/components/dccu/ScreenplayReader";
@@ -374,7 +374,35 @@ function CharactersSection({ isAlpha }: { isAlpha: boolean }) {
     </div>
   );
 }
-function CharacterDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; role:string; bio:string })=>void; editable?: boolean; onDelete?: ()=>void; }){ const [name,setName]=useState(initial?.name||""); const [role,setRole]=useState(initial?.role||""); const [bio,setBio]=useState(initial?.bio||""); return (<Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100"><DialogHeader><DialogTitle>{initial?"Character":"New Character"}</DialogTitle></DialogHeader><div className="space-y-3"><Field label="Name"><input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} /></Field><Field label="Role"><input className="fld" value={role} onChange={e=>setRole(e.target.value)} disabled={!editable} /></Field><Field label="Bio"><textarea className="fld min-h-28" value={bio} onChange={e=>setBio(e.target.value)} disabled={!editable} /></Field><div className="flex justify-end gap-2">{initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}{editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), role:role.trim(), bio })}>{initial?"Save":"Create"}</Button>}</div></div></DialogContent></Dialog> }
+function CharacterDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; role:string; bio:string })=>void; editable?: boolean; onDelete?: ()=>void; }) { 
+  const [name,setName]=useState(initial?.name||""); 
+  const [role,setRole]=useState(initial?.role||""); 
+  const [bio,setBio]=useState(initial?.bio||""); 
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100">
+        <DialogHeader>
+          <DialogTitle>{initial?"Character":"New Character"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <Field label="Name">
+            <input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} />
+          </Field>
+          <Field label="Role">
+            <input className="fld" value={role} onChange={e=>setRole(e.target.value)} disabled={!editable} />
+          </Field>
+          <Field label="Bio">
+            <textarea className="fld min-h-28" value={bio} onChange={e=>setBio(e.target.value)} disabled={!editable} />
+          </Field>
+          <div className="flex justify-end gap-2">
+            {initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}
+            {editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), role:role.trim(), bio })}>{initial?"Save":"Create"}</Button>}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function ArtifactsSection({ isAlpha }: { isAlpha: boolean }) {
   const { data, addArtifact, updateArtifact, removeArtifact } = useDCCU();
