@@ -1,3 +1,4 @@
+import React, { useState, useMemo } from "react";
 import ConsoleLayout from "@/components/layout/ConsoleLayout";
 import { HUDPanel } from "@/components/hud/HUDPanel";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,8 @@ import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbS
 import { useAuth } from "@/state/auth";
 import { useDCCU } from "@/state/dccu";
 import { useSupabaseData } from "@/hooks/use-supabase-data";
-import { Movie } from "@/shared/supabase";
+import { Movie } from "@shared/supabase";
 import ScreenplayReader from "@/components/dccu/ScreenplayReader";
-import { useState, useMemo } from "react";
 import { Film, Users, Shirt, Box, Clock, Sparkles, ShieldAlert, Search } from "lucide-react";
 
 export default function DCCU() {
