@@ -63,6 +63,12 @@ interface Ctx {
 
 const DCCUContext = createContext<Ctx | null>(null);
 
+export const useDCCU = () => {
+  const ctx = useContext(DCCUContext);
+  if (!ctx) throw new Error("useDCCU must be used within DCCUProvider");
+  return ctx;
+};
+
 export const DCCUProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [data, setData] = useState<DCCUStore>(() => {
     try {
