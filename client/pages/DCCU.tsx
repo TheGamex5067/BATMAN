@@ -63,7 +63,7 @@ export default function DCCU() {
 
       console.log('Adding movie:', movieData);
       await insertData(movieData);
-      
+
       console.log('Movie added successfully');
       setNewMovie({
         title: '',
@@ -202,7 +202,7 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
   const [readerId, setReaderId] = useState<string | null>(null);
   const readerMovie = useMemo(() => {
     if (!readerId) return null;
-    
+
     // Check if it's a Supabase movie
     if (readerId.startsWith('supabase-')) {
       const supabaseId = readerId.replace('supabase-', '');
@@ -219,7 +219,7 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
         };
       }
     }
-    
+
     return null;
   }, [readerId, movies]);
 
@@ -339,73 +339,22 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
           </div>
         </HUDPanel>
 
-        
+
       {readerMovie && <ScreenplayReader movie={readerMovie as any} onClose={()=>setReaderId(null)} />}
     </div>
   );
 }
 
-function MovieDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ title:string; kind:"summary"|"screenplay"; summary:string; screenplay?:string })=>void; editable?: boolean; onDelete?: ()=>void; }){
-  const [title, setTitle] = useState(initial?.title||"");
-  const [kind, setKind] = useState<"summary"|"screenplay">(initial?.kind||"summary");
-  const [summary, setSummary] = useState(initial?.summary||"");
-  const [screenplay, setScreenplay] = useState(initial?.screenplay||"");
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100 max-w-3xl"><DialogHeader><DialogTitle>{initial?"Movie":"New Movie"}</DialogTitle></DialogHeader><div className="space-y-3"><Field label="Title"><input className="fld" value={title} onChange={e=>setTitle(e.target.value)} disabled={!editable} /></Field><Field label="Kind"><select className="fld" value={kind} onChange={e=>setKind(e.target.value as any)} disabled={!editable}><option value="summary">Summary</option><option value="screenplay">Screenplay</option></select></Field>{kind==="summary" && (<Field label="Summary"><textarea className="fld min-h-28" value={summary} onChange={e=>setSummary(e.target.value)} disabled={!editable} /></Field>)}{kind==="screenplay" && (<Field label="Screenplay"><textarea className="fld min-h-[50vh] font-mono" value={screenplay} onChange={e=>setScreenplay(e.target.value)} disabled={!editable} placeholder="INT. BATCAVE - NIGHT\n..." /></Field>)}<div className="flex justify-end gap-2">{initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}{editable && <Button onClick={()=> title.trim() && onSubmit({ title: title.trim(), kind, summary, screenplay })}>{initial?"Save":"Create"}</Button>}</div></div></DialogContent></Dialog>
-  );
-}
-
 function SuitsSection({ isAlpha }: { isAlpha: boolean }) {
-  const { data, addSuit, updateSuit, removeSuit } = useDCCU();
+  const data = { suits: [] }; // Placeholder - will be replaced with Supabase data later
   const [open, setOpen] = useState(false); const [editing, setEditing] = useState<string|null>(null); const item = useMemo(()=> data.suits.find(m=>m.id===editing) || null,[editing,data.suits]);
   const slots = Math.max(6, data.suits.length || 0);
   return (
     <div className="space-y-4">
       <Grid>
-        {data.suits.map(m => (
-          <CardShell key={m.id}>
-            {m.imageData && (
-              <div className="p-3 flex items-center justify-center bg-black/30 border-b border-cyan-500/20">
-                <img src={m.imageData} alt={m.name} style={{ transform: `scale(${m.imageScale ?? 1})`, transformOrigin: "center", maxHeight: 180 }} className="object-contain" />
-              </div>
-            )}
-            <Row title={`${m.name} • ${m.version}`} onClick={()=> isAlpha && setEditing(m.id)} cta={isAlpha && (<div className="flex gap-1"><Button size="sm" variant="ghost" className="border border-cyan-500/30 text-cyan-200" onClick={(e)=>{e.stopPropagation(); setEditing(m.id);}}>Edit</Button><Button size="sm" variant="destructive" className="text-rose-200" onClick={(e)=>{e.stopPropagation(); if (confirm('Delete suit?')) removeSuit(m.id);}}>Delete</Button></div>)} />
-          </CardShell>
-        ))}
-        {!isAlpha && Array.from({ length: Math.max(0, slots - data.suits.length) }).map((_,i)=>(<EmptySlot key={i} label="Empty Slot – Add Entry (Alpha Only)" />))}
-        {isAlpha && (<button className="h-28 rounded-xl border-2 border-dashed border-cyan-500/40 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-200 text-sm" onClick={()=>setOpen(true)}>+ Add Entry</button>)}
+        {Array.from({ length: slots }).map((_,i)=>(<EmptySlot key={i} label="Coming Soon - Supabase Integration" />))}
       </Grid>
-      <SuitDialog open={open} onOpenChange={setOpen} onSubmit={(v)=>{ addSuit(v as any); setOpen(false); }} />
-      {item && <SuitDialog open={!!item} onOpenChange={()=>setEditing(null)} initial={item} editable={isAlpha} onSubmit={(v)=>{ updateSuit({ ...item, ...v } as any); setEditing(null); }} onDelete={()=>{ removeSuit(item.id); setEditing(null); }} />}
     </div>
-  );
-}
-function SuitDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; version:string; notes:string; imageData?:string; imageScale?:number })=>void; editable?: boolean; onDelete?: ()=>void; }) {
-  const [name,setName]=useState(initial?.name||""); const [version,setVersion]=useState(initial?.version||"v1"); const [notes,setNotes]=useState(initial?.notes||"");
-  const [imageData, setImageData] = useState<string>(initial?.imageData||"");
-  const [imageScale, setImageScale] = useState<number>(initial?.imageScale||1);
-  const onFile = (f?: File) => {
-    if (!f) return; const reader = new FileReader(); reader.onload = () => setImageData(String(reader.result||"")); reader.readAsDataURL(f);
-  };
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100 max-w-2xl"><DialogHeader><DialogTitle>{initial?"Suit":"New Suit"}</DialogTitle></DialogHeader><div className="space-y-3">
-      <Field label="Name"><input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} /></Field>
-      <Field label="Version"><input className="fld" value={version} onChange={e=>setVersion(e.target.value)} disabled={!editable} /></Field>
-      <Field label="Notes"><textarea className="fld min-h-28" value={notes} onChange={e=>setNotes(e.target.value)} disabled={!editable} /></Field>
-      <Field label="Suit Image">
-        <input type="file" accept="image/*" onChange={e=>onFile(e.target.files?.[0])} disabled={!editable} className="text-sm" />
-        {imageData && (
-          <div className="mt-3 rounded border border-cyan-500/20 p-3 bg-black/30">
-            <div className="flex items-center justify-between text-xs text-cyan-200/80 mb-2"><span>Preview</span><span>Scale: {imageScale.toFixed(2)}x</span></div>
-            <div className="flex items-center justify-center">
-              <img src={imageData} alt="preview" style={{ transform:`scale(${imageScale})`, transformOrigin:"center", maxHeight:240 }} className="object-contain" />
-            </div>
-            <input type="range" min={0.4} max={2} step={0.05} value={imageScale} onChange={e=>setImageScale(parseFloat(e.target.value))} disabled={!editable} className="w-full mt-3" />
-          </div>
-        )}
-      </Field>
-      <div className="flex justify-end gap-2">{initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}{editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), version:version.trim(), notes, imageData, imageScale })}>{initial?"Save":"Create"}</Button>}</div>
-    </div></DialogContent></Dialog>
   );
 }
 
@@ -425,7 +374,7 @@ function CharactersSection({ isAlpha }: { isAlpha: boolean }) {
     </div>
   );
 }
-function CharacterDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; role:string; bio:string })=>void; editable?: boolean; onDelete?: ()=>void; }){ const [name,setName]=useState(initial?.name||""); const [role,setRole]=useState(initial?.role||""); const [bio,setBio]=useState(initial?.bio||""); return (<Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100"><DialogHeader><DialogTitle>{initial?"Character":"New Character"}</DialogTitle></DialogHeader><div className="space-y-3"><Field label="Name"><input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} /></Field><Field label="Role"><input className="fld" value={role} onChange={e=>setRole(e.target.value)} disabled={!editable} /></Field><Field label="Bio"><textarea className="fld min-h-28" value={bio} onChange={e=>setBio(e.target.value)} disabled={!editable} /></Field><div className="flex justify-end gap-2">{initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}{editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), role:role.trim(), bio })}>{initial?"Save":"Create"}</Button>}</div></div></DialogContent></Dialog>); }
+function CharacterDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; role:string; bio:string })=>void; editable?: boolean; onDelete?: ()=>void; }){ const [name,setName]=useState(initial?.name||""); const [role,setRole]=useState(initial?.role||""); const [bio,setBio]=useState(initial?.bio||""); return (<Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100"><DialogHeader><DialogTitle>{initial?"Character":"New Character"}</DialogTitle></DialogHeader><div className="space-y-3"><Field label="Name"><input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} /></Field><Field label="Role"><input className="fld" value={role} onChange={e=>setRole(e.target.value)} disabled={!editable} /></Field><Field label="Bio"><textarea className="fld min-h-28" value={bio} onChange={e=>setBio(e.target.value)} disabled={!editable} /></Field><div className="flex justify-end gap-2">{initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}{editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), role:role.trim(), bio })}>{initial?"Save":"Create"}</Button>}</div></div></DialogContent></Dialog> }
 
 function ArtifactsSection({ isAlpha }: { isAlpha: boolean }) {
   const { data, addArtifact, updateArtifact, removeArtifact } = useDCCU();
@@ -443,7 +392,7 @@ function ArtifactsSection({ isAlpha }: { isAlpha: boolean }) {
     </div>
   );
 }
-function ArtifactDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; type:string; description:string })=>void; editable?: boolean; onDelete?: ()=>void; }){ const [name,setName]=useState(initial?.name||""); const [type,setType]=useState(initial?.type||""); const [description,setDescription]=useState(initial?.description||""); return (<Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100"><DialogHeader><DialogTitle>{initial?"Artifact":"New Artifact"}</DialogTitle></DialogHeader><div className="space-y-3"><Field label="Name"><input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} /></Field><Field label="Type"><input className="fld" value={type} onChange={e=>setType(e.target.value)} disabled={!editable} /></Field><Field label="Description"><textarea className="fld min-h-28" value={description} onChange={e=>setDescription(e.target.value)} disabled={!editable} /></Field><div className="flex justify-end gap-2">{initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}{editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), type:type.trim(), description })}>{initial?"Save":"Create"}</Button>}</div></div></DialogContent></Dialog>); }
+function ArtifactDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; type:string; description:string })=>void; editable?: boolean; onDelete?: ()=>void; }){ const [name,setName]=useState(initial?.name||""); const [type,setType]=useState(initial?.type||""); const [description,setDescription]=useState(initial?.description||""); return (<Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100"><DialogHeader><DialogTitle>{initial?"Artifact":"New Artifact"}</DialogTitle></DialogHeader><div className="space-y-3"><Field label="Name"><input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} /></Field><Field label="Type"><input className="fld" value={type} onChange={e=>setType(e.target.value)} disabled={!editable} /></Field><Field label="Description"><textarea className="fld min-h-28" value={description} onChange={e=>setDescription(e.target.value)} disabled={!editable} /></Field><div className="flex justify-end gap-2">{initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}{editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), type:type.trim(), description })}>{initial?"Save":"Create"}</Button>}</div></div></DialogContent></Dialog> }
 
 function FuturesSection({ isAlpha }: { isAlpha: boolean }) {
   const { data, addFuture, updateFuture, removeFuture } = useDCCU();
