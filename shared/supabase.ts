@@ -1,16 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Get environment variables with fallbacks for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || ''
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || ''
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder_key'
 
-// Validate URL format
-if (!supabaseUrl || !supabaseUrl.startsWith('https://')) {
-  console.error('Invalid or missing Supabase URL. Please check your environment variables.')
-}
-
-if (!supabaseAnonKey) {
-  console.error('Missing Supabase anon key. Please check your environment variables.')
+// Only warn if using placeholder values
+if (supabaseUrl === 'https://placeholder.supabase.co') {
+  console.warn('Using placeholder Supabase URL. Set VITE_SUPABASE_URL for real database access.')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
