@@ -420,7 +420,35 @@ function ArtifactsSection({ isAlpha }: { isAlpha: boolean }) {
     </div>
   );
 }
-function ArtifactDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; type:string; description:string })=>void; editable?: boolean; onDelete?: ()=>void; }){ const [name,setName]=useState(initial?.name||""); const [type,setType]=useState(initial?.type||""); const [description,setDescription]=useState(initial?.description||""); return (<Dialog open={open} onOpenChange={onOpenChange}><DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100"><DialogHeader><DialogTitle>{initial?"Artifact":"New Artifact"}</DialogTitle></DialogHeader><div className="space-y-3"><Field label="Name"><input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} /></Field><Field label="Type"><input className="fld" value={type} onChange={e=>setType(e.target.value)} disabled={!editable} /></Field><Field label="Description"><textarea className="fld min-h-28" value={description} onChange={e=>setDescription(e.target.value)} disabled={!editable} /></Field><div className="flex justify-end gap-2">{initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}{editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), type:type.trim(), description })}>{initial?"Save":"Create"}</Button>}</div></div></DialogContent></Dialog> }
+function ArtifactDialog({ open, onOpenChange, initial, onSubmit, editable = true, onDelete }: { open: boolean; onOpenChange: (v: boolean)=>void; initial?: any; onSubmit: (v:{ name:string; type:string; description:string })=>void; editable?: boolean; onDelete?: ()=>void; }) { 
+  const [name,setName]=useState(initial?.name||""); 
+  const [type,setType]=useState(initial?.type||""); 
+  const [description,setDescription]=useState(initial?.description||""); 
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="bg-black/60 border-cyan-500/30 text-cyan-100">
+        <DialogHeader>
+          <DialogTitle>{initial?"Artifact":"New Artifact"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <Field label="Name">
+            <input className="fld" value={name} onChange={e=>setName(e.target.value)} disabled={!editable} />
+          </Field>
+          <Field label="Type">
+            <input className="fld" value={type} onChange={e=>setType(e.target.value)} disabled={!editable} />
+          </Field>
+          <Field label="Description">
+            <textarea className="fld min-h-28" value={description} onChange={e=>setDescription(e.target.value)} disabled={!editable} />
+          </Field>
+          <div className="flex justify-end gap-2">
+            {initial && editable && <Button variant="destructive" onClick={onDelete}>Delete</Button>}
+            {editable && <Button onClick={()=> name.trim() && onSubmit({ name:name.trim(), type:type.trim(), description })}>{initial?"Save":"Create"}</Button>}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function FuturesSection({ isAlpha }: { isAlpha: boolean }) {
   const { data, addFuture, updateFuture, removeFuture } = useDCCU();
