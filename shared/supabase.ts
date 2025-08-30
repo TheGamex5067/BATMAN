@@ -1,14 +1,19 @@
+import { createClient } from '@supabase/supabase-js'
 
-import { createClient } from '@supabase/supabase-js';
+// Get environment variables with fallbacks for development
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || ''
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || ''
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+// Validate URL format
+if (!supabaseUrl || !supabaseUrl.startsWith('https://')) {
+  console.error('Invalid or missing Supabase URL. Please check your environment variables.')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+if (!supabaseAnonKey) {
+  console.error('Missing Supabase anon key. Please check your environment variables.')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types
 export interface Module {
