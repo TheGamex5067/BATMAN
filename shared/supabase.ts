@@ -1,14 +1,15 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Get environment variables with fallbacks for development
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'placeholder_key'
+// Get environment variables from Secrets
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Only warn if using placeholder values
-if (supabaseUrl === 'https://placeholder.supabase.co') {
-  console.warn('Using placeholder Supabase URL. Set VITE_SUPABASE_URL for real database access.')
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase credentials. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Secrets.')
+  throw new Error('Supabase credentials not configured')
 }
 
+console.log('✅ Connected to Supabase database for persistent storage')
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Database types
