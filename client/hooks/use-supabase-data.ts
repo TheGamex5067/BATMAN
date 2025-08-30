@@ -37,8 +37,11 @@ export function useSupabaseData<T extends TableData>(tableName: TableName) {
       // Filter based on clearance level
       const filteredData = (fetchedData || []).filter((item: any) => {
         const itemAccessLevel = ACCESS_HIERARCHY[item.clearance_level as AccessLevel];
+        // Users can see content at their level and below
         return itemAccessLevel <= userAccessLevel;
       });
+
+      console.log(`User level: ${userLevel} (${userAccessLevel}), Found ${fetchedData?.length || 0} total items, Showing ${filteredData.length} items`);
 
       setData(filteredData as T[]);
     } catch (err) {
