@@ -34,7 +34,7 @@ const App = () => (
           <OpsProvider>
             <VaultProvider>
               <CreatorProvider>
-                <BrowserRouter>
+                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
                   <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route
