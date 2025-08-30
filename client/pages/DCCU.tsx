@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/state/auth";
-import { useDCCU } from "@/state/dccu";
+
 import { useSupabaseData } from "@/hooks/use-supabase-data";
 import { Movie } from "@shared/supabase";
 import ScreenplayReader from "@/components/dccu/ScreenplayReader";
@@ -199,11 +199,7 @@ function Row({ title, subtitle, onClick, cta }: { title: string; subtitle?: stri
 // Sections
 
 function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setShowAddForm, newMovie, setNewMovie, handleAddMovie }: { isAlpha: boolean; movies: Movie[]; loading: boolean; canModify: boolean; showAddForm: boolean; setShowAddForm: (val: boolean) => void; newMovie: any; setNewMovie: (val: any) => void; handleAddMovie: () => Promise<void> }) {
-  const { data, addMovie, updateMovie, removeMovie } = useDCCU();
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<string | null>(null);
   const [readerId, setReaderId] = useState<string | null>(null);
-  const movie = useMemo(() => data.movies.find(m => m.id === editing) || null, [editing, data.movies]);
   const readerMovie = useMemo(() => {
     if (!readerId) return null;
     
@@ -224,11 +220,8 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
       }
     }
     
-    // Check local DCCU movies
-    return data.movies.find(m => m.id === readerId) || null;
-  }, [readerId, data.movies, movies]);
-
-  const slots = Math.max(6, movies.length || 0);
+    return null;
+  }, [readerId, movies]);
 
   return (
     <div className="space-y-4">
@@ -346,39 +339,7 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
           </div>
         </HUDPanel>
 
-        <HUDPanel title="DCCU Archives" className="mb-6">
-          <div className="space-y-4">
-            <div className="text-sm text-slate-300">
-              DC Cinematic Universe database contains classified information about all Batman-related productions.
-            </div>
-            {isAlpha && (
-              <button 
-                onClick={() => console.log('Load Batman Begins screenplay')}
-                className="text-cyan-300 hover:text-cyan-100 text-left text-sm underline"
-              >
-                Load Batman Begins Screenplay
-              </button>
-            )}
-          </div>
-        </HUDPanel>
-
-      <Grid>
-        {data.movies.map(m => (
-          <CardShell key={m.id}>
-            <Row title={m.title} subtitle={m.kind} onClick={() => (isAlpha ? setEditing(m.id) : setReaderId(m.id))} cta={<div className="flex gap-1">{m.kind === "screenplay" && (<Button size="sm" variant="ghost" className="border border-cyan-500/30 text-cyan-200" onClick={(e)=>{e.stopPropagation(); setReaderId(m.id);}}>Read</Button>)}{isAlpha && (<><Button size="sm" variant="ghost" className="border border-cyan-500/30 text-cyan-200" onClick={(e)=>{e.stopPropagation(); setEditing(m.id);}}>Edit</Button><Button size="sm" variant="destructive" className="text-rose-200" onClick={(e)=>{e.stopPropagation(); if (confirm('Delete movie?')) removeMovie(m.id);}}>Delete</Button></>)}</div>} />
-          </CardShell>
-        ))}
-        {!isAlpha && Array.from({ length: Math.max(0, slots - data.movies.length) }).map((_, i) => (
-          <EmptySlot key={i} label="Empty Slot – Add Entry (Alpha Only)" />
-        ))}
-        {isAlpha && (
-          <button className="h-28 rounded-xl border-2 border-dashed border-cyan-500/40 bg-cyan-500/5 hover:bg-cyan-500/10 text-cyan-200 text-sm" onClick={() => setOpen(true)}>
-            + Add Entry
-          </button>
-        )}
-      </Grid>
-      <MovieDialog open={open} onOpenChange={setOpen} onSubmit={(v)=>{ addMovie(v as any); setOpen(false); }} />
-      {movie && <MovieDialog open={!!movie} onOpenChange={()=>setEditing(null)} initial={movie} editable={isAlpha} onSubmit={(v)=>{ updateMovie({ ...movie, ...v } as any); setEditing(null); }} onDelete={()=>{ removeMovie(movie.id); setEditing(null); }} />}
+        
       {readerMovie && <ScreenplayReader movie={readerMovie as any} onClose={()=>setReaderId(null)} />}
     </div>
   );
