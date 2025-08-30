@@ -14,6 +14,8 @@ import { useSupabaseData } from "@/hooks/use-supabase-data";
 import { Movie } from "@shared/supabase";
 import ScreenplayReader from "@/components/dccu/ScreenplayReader";
 import { Film, Users, Shirt, Box, Clock, Sparkles, ShieldAlert, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function DCCU() {
   const { session } = useAuth();
@@ -31,10 +33,40 @@ export default function DCCU() {
   });
 
   const handleAddMovie = async () => {
-    if (!newMovie.title.trim()) return;
+    if (!newMovie.title.trim()) {
+      console.error('Movie title is required');
+      return;
+    }
+
+    if (!newMovie.director.trim()) {
+      console.error('Director is required');
+      return;
+    }
+
+    if (newMovie.year < 1900 || newMovie.year > 2030) {
+      console.error('Please enter a valid year');
+      return;
+    }
+
+    if (newMovie.rating < 0 || newMovie.rating > 10) {
+      console.error('Rating must be between 0 and 10');
+      return;
+    }
 
     try {
-      await insertData(newMovie);
+      const movieData = {
+        title: newMovie.title.trim(),
+        year: newMovie.year,
+        director: newMovie.director.trim(),
+        rating: newMovie.rating,
+        synopsis: newMovie.synopsis.trim(),
+        clearance_level: newMovie.clearance_level
+      };
+
+      console.log('Adding movie:', movieData);
+      await insertData(movieData);
+      
+      console.log('Movie added successfully');
       setNewMovie({
         title: '',
         year: new Date().getFullYear(),
@@ -46,6 +78,11 @@ export default function DCCU() {
       setShowAddForm(false);
     } catch (error) {
       console.error('Failed to add movie:', error);
+      // More detailed error logging
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      }
     }
   };
 
