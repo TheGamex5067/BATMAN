@@ -204,7 +204,29 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
   const [editing, setEditing] = useState<string | null>(null);
   const [readerId, setReaderId] = useState<string | null>(null);
   const movie = useMemo(() => data.movies.find(m => m.id === editing) || null, [editing, data.movies]);
-  const readerMovie = useMemo(() => data.movies.find(m => m.id === readerId) || null, [readerId, data.movies]);
+  const readerMovie = useMemo(() => {
+    if (!readerId) return null;
+    
+    // Check if it's a Supabase movie
+    if (readerId.startsWith('supabase-')) {
+      const supabaseId = readerId.replace('supabase-', '');
+      const supabaseMovie = movies.find(m => m.id === supabaseId);
+      if (supabaseMovie) {
+        // Convert Supabase movie to local movie format for the reader
+        return {
+          id: supabaseMovie.id,
+          title: supabaseMovie.title,
+          kind: 'summary' as const,
+          summary: supabaseMovie.synopsis,
+          screenplay: '',
+          createdAt: Date.now()
+        };
+      }
+    }
+    
+    // Check local DCCU movies
+    return data.movies.find(m => m.id === readerId) || null;
+  }, [readerId, data.movies, movies]);
 
   const slots = Math.max(6, movies.length || 0);
 
@@ -301,14 +323,22 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
                   <p className="text-xs text-slate-300 mb-3 line-clamp-3">{movie.synopsis}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-slate-400">CLEARANCE: {movie.clearance_level}</span>
-                    {isAlpha && (
+                    <div className="flex gap-2">
                       <button 
-                        onClick={() => console.log('Load screenplay:', movie.title)}
+                        onClick={() => setReaderId(`supabase-${movie.id}`)}
                         className="text-cyan-300 hover:text-cyan-100 text-xs underline"
                       >
-                        Load Script
+                        Read
                       </button>
-                    )}
+                      {isAlpha && (
+                        <button 
+                          onClick={() => console.log('Load screenplay:', movie.title)}
+                          className="text-cyan-300 hover:text-cyan-100 text-xs underline"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
@@ -349,7 +379,7 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
       </Grid>
       <MovieDialog open={open} onOpenChange={setOpen} onSubmit={(v)=>{ addMovie(v as any); setOpen(false); }} />
       {movie && <MovieDialog open={!!movie} onOpenChange={()=>setEditing(null)} initial={movie} editable={isAlpha} onSubmit={(v)=>{ updateMovie({ ...movie, ...v } as any); setEditing(null); }} onDelete={()=>{ removeMovie(movie.id); setEditing(null); }} />}
-      {readerMovie && readerMovie.kind === "screenplay" && <ScreenplayReader movie={readerMovie as any} onClose={()=>setReaderId(null)} />}
+      {readerMovie && <ScreenplayReader movie={readerMovie as any} onClose={()=>setReaderId(null)} />}
     </div>
   );
 }

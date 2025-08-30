@@ -9,7 +9,7 @@ export default function ScreenplayReader({ movie, onClose }: { movie: Movie; onC
   const inc = () => setScale(s => Math.min(1.6, s + 0.1));
   const dec = () => setScale(s => Math.max(0.8, s - 0.1));
 
-  const content = movie.screenplay || movie.summary;
+  const content = movie.screenplay || movie.summary || movie.synopsis || 'No content available.';
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex flex-col">
