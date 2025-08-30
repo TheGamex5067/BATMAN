@@ -13,8 +13,8 @@ export default defineConfig(({ mode }) => ({
       ".repl.co"
     ],
     hmr: {
-      host: "0.0.0.0",
-      port: 8080
+      port: 8080,
+      clientPort: 443
     },
     fs: {
       allow: ["./client", "./shared"],
