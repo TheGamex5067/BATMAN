@@ -1,18 +1,50 @@
 import ConsoleLayout from "@/components/layout/ConsoleLayout";
-import { useAuth } from "@/state/auth";
+import { HUDPanel } from "@/components/hud/HUDPanel";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/state/auth";
 import { useDCCU } from "@/state/dccu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
+import { useSupabaseData } from "@/hooks/use-supabase-data";
+import { Movie } from "@/shared/supabase";
 import ScreenplayReader from "@/components/dccu/ScreenplayReader";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Film, Users, Shirt, Box, Clock, Sparkles, ShieldAlert, Search } from "lucide-react";
 
 export default function DCCU() {
   const { session } = useAuth();
   const isAlpha = session?.level === "ALPHA";
   const { data } = useDCCU();
+  const { data: movies, loading, insertData, canModify } = useSupabaseData<Movie>('movies');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newMovie, setNewMovie] = useState({
+    title: '',
+    year: new Date().getFullYear(),
+    director: '',
+    rating: 0,
+    synopsis: '',
+    clearance_level: 'DELTA' as const
+  });
+
+  const handleAddMovie = async () => {
+    if (!newMovie.title.trim()) return;
+
+    try {
+      await insertData(newMovie);
+      setNewMovie({
+        title: '',
+        year: new Date().getFullYear(),
+        director: '',
+        rating: 0,
+        synopsis: '',
+        clearance_level: 'DELTA'
+      });
+      setShowAddForm(false);
+    } catch (error) {
+      console.error('Failed to add movie:', error);
+    }
+  };
 
   const [tab, setTab] = useState<string>("movies");
   const title = useMemo(() =>
@@ -51,7 +83,7 @@ export default function DCCU() {
         </div>
         <div className="col-span-12 lg:col-span-10">
           <HeaderBar isAlpha={isAlpha} />
-          <TabsContent value="movies"><MoviesSection isAlpha={isAlpha} /></TabsContent>
+          <TabsContent value="movies"><MoviesSection isAlpha={isAlpha} movies={movies} loading={loading} canModify={canModify} showAddForm={showAddForm} setShowAddForm={setShowAddForm} newMovie={newMovie} setNewMovie={setNewMovie} handleAddMovie={handleAddMovie} /></TabsContent>
           <TabsContent value="characters"><CharactersSection isAlpha={isAlpha} /></TabsContent>
           <TabsContent value="suits"><SuitsSection isAlpha={isAlpha} /></TabsContent>
           <TabsContent value="artifacts"><ArtifactsSection isAlpha={isAlpha} /></TabsContent>
@@ -128,7 +160,7 @@ function Row({ title, subtitle, onClick, cta }: { title: string; subtitle?: stri
 
 // Sections
 
-function MoviesSection({ isAlpha }: { isAlpha: boolean }) {
+function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setShowAddForm, newMovie, setNewMovie, handleAddMovie }: { isAlpha: boolean; movies: Movie[]; loading: boolean; canModify: boolean; showAddForm: boolean; setShowAddForm: (val: boolean) => void; newMovie: any; setNewMovie: (val: any) => void; handleAddMovie: () => Promise<void> }) {
   const { data, addMovie, updateMovie, removeMovie } = useDCCU();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
@@ -136,10 +168,132 @@ function MoviesSection({ isAlpha }: { isAlpha: boolean }) {
   const movie = useMemo(() => data.movies.find(m => m.id === editing) || null, [editing, data.movies]);
   const readerMovie = useMemo(() => data.movies.find(m => m.id === readerId) || null, [readerId, data.movies]);
 
-  const slots = Math.max(6, data.movies.length || 0);
+  const slots = Math.max(6, movies.length || 0);
 
   return (
     <div className="space-y-4">
+      <HUDPanel title="DCCU Movie Database" className="mb-6">
+          {canModify && (
+            <div className="mb-4 flex justify-end">
+              <Button 
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
+              >
+                {showAddForm ? 'Cancel' : 'Add Movie'}
+              </Button>
+            </div>
+          )}
+
+          {showAddForm && (
+            <div className="mb-6 p-4 border border-cyan-500/30 bg-slate-900/50 rounded">
+              <h3 className="text-cyan-300 font-mono text-sm mb-3">New Movie Entry</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <Input
+                  placeholder="Movie title"
+                  value={newMovie.title}
+                  onChange={(e) => setNewMovie(prev => ({ ...prev, title: e.target.value }))}
+                  className="bg-slate-800/50 border-cyan-500/30 text-cyan-100"
+                />
+                <Input
+                  type="number"
+                  placeholder="Year"
+                  value={newMovie.year}
+                  onChange={(e) => setNewMovie(prev => ({ ...prev, year: parseInt(e.target.value) || 0 }))}
+                  className="bg-slate-800/50 border-cyan-500/30 text-cyan-100"
+                />
+                <Input
+                  placeholder="Director"
+                  value={newMovie.director}
+                  onChange={(e) => setNewMovie(prev => ({ ...prev, director: e.target.value }))}
+                  className="bg-slate-800/50 border-cyan-500/30 text-cyan-100"
+                />
+                <Input
+                  type="number"
+                  step="0.1"
+                  placeholder="Rating (0-10)"
+                  value={newMovie.rating}
+                  onChange={(e) => setNewMovie(prev => ({ ...prev, rating: parseFloat(e.target.value) || 0 }))}
+                  className="bg-slate-800/50 border-cyan-500/30 text-cyan-100"
+                />
+              </div>
+              <Textarea
+                placeholder="Synopsis"
+                value={newMovie.synopsis}
+                onChange={(e) => setNewMovie(prev => ({ ...prev, synopsis: e.target.value }))}
+                className="bg-slate-800/50 border-cyan-500/30 text-cyan-100 mb-3"
+              />
+              <Select 
+                value={newMovie.clearance_level} 
+                onValueChange={(value: any) => setNewMovie(prev => ({ ...prev, clearance_level: value }))}
+              >
+                <SelectTrigger className="bg-slate-800/50 border-cyan-500/30 text-cyan-100 mb-3">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DELTA">DELTA</SelectItem>
+                  <SelectItem value="GAMMA">GAMMA</SelectItem>
+                  <SelectItem value="BETA">BETA</SelectItem>
+                  <SelectItem value="ALPHA">ALPHA</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button 
+                onClick={handleAddMovie}
+                className="bg-green-500/20 text-green-300 border border-green-500/30"
+              >
+                Add Movie
+              </Button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {loading ? (
+              <div className="col-span-full text-center text-slate-400 py-8">Loading movie database...</div>
+            ) : movies.length === 0 ? (
+              <div className="col-span-full text-center text-slate-400 py-8">No movies available for your clearance level.</div>
+            ) : (
+              movies.map((movie) => (
+                <div key={movie.id} className="p-4 border border-cyan-500/30 bg-slate-900/50 rounded">
+                  <h3 className="text-cyan-300 font-mono text-sm mb-1">{movie.title}</h3>
+                  <div className="text-xs text-slate-400 mb-2">
+                    {movie.year} • Dir: {movie.director}
+                  </div>
+                  <div className="text-xs text-yellow-300 mb-2">
+                    Rating: {movie.rating}/10
+                  </div>
+                  <p className="text-xs text-slate-300 mb-3 line-clamp-3">{movie.synopsis}</p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-slate-400">CLEARANCE: {movie.clearance_level}</span>
+                    {isAlpha && (
+                      <button 
+                        onClick={() => loadScreenplay(movie.title.toLowerCase().replace(/\s+/g, '-'))}
+                        className="text-cyan-300 hover:text-cyan-100 text-xs underline"
+                      >
+                        Load Script
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </HUDPanel>
+
+        <HUDPanel title="DCCU Archives" className="mb-6">
+          <div className="space-y-4">
+            <div className="text-sm text-slate-300">
+              DC Cinematic Universe database contains classified information about all Batman-related productions.
+            </div>
+            {isAlpha && (
+              <button 
+                onClick={() => loadScreenplay("batman-begins")}
+                className="text-cyan-300 hover:text-cyan-100 text-left text-sm underline"
+              >
+                Load Batman Begins Screenplay
+              </button>
+            )}
+          </div>
+        </HUDPanel>
+
       <Grid>
         {data.movies.map(m => (
           <CardShell key={m.id}>
