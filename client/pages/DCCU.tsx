@@ -4,12 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 import { useAuth } from "@/state/auth";
 import { useDCCU } from "@/state/dccu";
 import { useSupabaseData } from "@/hooks/use-supabase-data";
 import { Movie } from "@/shared/supabase";
 import ScreenplayReader from "@/components/dccu/ScreenplayReader";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Film, Users, Shirt, Box, Clock, Sparkles, ShieldAlert, Search } from "lucide-react";
 
 export default function DCCU() {
@@ -265,7 +268,7 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
                     <span className="text-xs text-slate-400">CLEARANCE: {movie.clearance_level}</span>
                     {isAlpha && (
                       <button 
-                        onClick={() => loadScreenplay(movie.title.toLowerCase().replace(/\s+/g, '-'))}
+                        onClick={() => console.log('Load screenplay:', movie.title)}
                         className="text-cyan-300 hover:text-cyan-100 text-xs underline"
                       >
                         Load Script
@@ -285,7 +288,7 @@ function MoviesSection({ isAlpha, movies, loading, canModify, showAddForm, setSh
             </div>
             {isAlpha && (
               <button 
-                onClick={() => loadScreenplay("batman-begins")}
+                onClick={() => console.log('Load Batman Begins screenplay')}
                 className="text-cyan-300 hover:text-cyan-100 text-left text-sm underline"
               >
                 Load Batman Begins Screenplay
