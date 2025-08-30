@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { supabase, Module, Movie, Character, Location, Technology } from '@/shared/supabase';
+import { supabase, Module, Movie, Character, Location, Technology } from '@shared/supabase';
 import { useAuth, AccessLevel } from '@/state/auth';
 
 type TableName = 'modules' | 'movies' | 'characters' | 'locations' | 'technologies';
