@@ -14,8 +14,6 @@ import { useSupabaseData } from "@/hooks/use-supabase-data";
 import { Movie } from "@shared/supabase";
 import ScreenplayReader from "@/components/dccu/ScreenplayReader";
 import { Film, Users, Shirt, Box, Clock, Sparkles, ShieldAlert, Search } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 
 export default function DCCU() {
   const { session } = useAuth();
